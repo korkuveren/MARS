@@ -90,7 +90,7 @@ struct BaseMath
 		return InCmp >= (T)(0) ? ValIfGreaterOrEqualToZero : ValIfLessZero;
 	}
 	
-	static FORCEINLINE void Sincos(float* OutSin, float* OutCos, float Angle)
+	static FORCEINLINE void SinCos(float* OutSin, float* OutCos, float Angle)
 	{
 		// If angle is outside range of [0, 2*pi], adjust it so it is.
 		// Using Fmod gives worse precision than the following code

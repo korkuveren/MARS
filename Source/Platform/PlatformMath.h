@@ -12,5 +12,8 @@
 #define MATH_RAD_TO_DEG_CONV 57.2957795130823f
 #define MATH_DEG_TO_RAD_CONV 0.0174532925199433f
 
+#define SUPER_SMALL_NUMBER 1.e-8f
+#define KINDA_SMALL_NUMBER 1.e-4f
+
 #include "Generic/GenericMath.h"
 typedef BaseMath PlatformMath;

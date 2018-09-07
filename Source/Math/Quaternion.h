@@ -1,14 +1,16 @@
 #pragma once
 
-#include "Vector.h"
+#include "Cartesian.h"
 
 class Quaternion
 {
 public:
+	static const Quaternion Identity;
+
 	FORCEINLINE Quaternion() {}
 	FORCEINLINE Quaternion(const Vector& quat);
 	FORCEINLINE Quaternion(float X, float Y, float Z, float W);
-	FORCEINLINE Quaternion(const Vector3D& Axis, float Angle);
+	FORCEINLINE Quaternion(const Spatial3D& Axis, float Angle);
 	
 	FORCEINLINE float operator[](uint32 index) const;
 	FORCEINLINE Quaternion operator+(const Quaternion& Other) const;
@@ -17,7 +19,7 @@ public:
 	FORCEINLINE Quaternion operator-=(const Quaternion& Other);
 	FORCEINLINE Quaternion operator*(const Quaternion& Other) const;
 	FORCEINLINE Quaternion operator*=(const Quaternion& Other);
-	FORCEINLINE Vector3D operator*(const Vector3D& Other) const;
+	FORCEINLINE Spatial3D operator*(const Spatial3D& Other) const;
 	FORCEINLINE Quaternion operator*(float Amount) const;
 	FORCEINLINE Quaternion operator*=(float Amount);
 	FORCEINLINE Quaternion operator/(float Amount) const;
@@ -35,19 +37,26 @@ public:
 	Quaternion Normalized(float ErrorMargin=1.e-8f) const;
 	bool IsNormalized(float ErrorMargin=1.e-4f) const;
 
-	Vector3D GetAxis() const;
+	Spatial3D GetAxis() const;
 	float GetAngle() const;
-	void AxisAndAngle(Vector3D& Axis, float& Angle) const;
+	void AxisAndAngle(Spatial3D& Axis, float& Angle) const;
 
-	Vector3D Rotate(const Vector3D& Other) const;
-	Quaternion SLerp(const Quaternion& Destination, float Amount, float ErrorMargin=1.e-4f) const;
+	Spatial3D Rotate(const Spatial3D& Other) const;
+
+	// https://en.wikipedia.org/wiki/Rotation_matrix 
+	/**	unimplemented */
+	Euler3D ToEuler() const { assert(false); return Euler3D::ZeroEuler; }
+	/** unimplemented */
+	static Quaternion FromEuler(const Euler3D& Euler) { Euler; assert(false); return Quaternion::Identity; }
+
+	Quaternion Slerp(const Quaternion& Destination, float Amount, float ErrorMargin=1.e-4f) const;
 	Quaternion Conjugate() const;
 	Quaternion Inverse() const;
 
-	FORCEINLINE Vector3D GetAxisX() const;
-	FORCEINLINE Vector3D GetAxisY() const;
-	FORCEINLINE Vector3D GetAxisZ() const;
-	FORCEINLINE Vector ToVector() const;
+	FORCEINLINE Spatial3D GetAxisX() const;
+	FORCEINLINE Spatial3D GetAxisY() const;
+	FORCEINLINE Spatial3D GetAxisZ() const;
+	FORCEINLINE Vector AsIntrinsic() const;
 
 private:
 
@@ -69,12 +78,12 @@ FORCEINLINE Quaternion::Quaternion(const Vector& quat) :
 FORCEINLINE Quaternion::Quaternion(float X, float Y, float Z, float W) :
 	m_Vector(Vector::Make(X, Y, Z, W)) {}
 
-FORCEINLINE Quaternion::Quaternion(const Vector3D& Axis, float Angle)
+FORCEINLINE Quaternion::Quaternion(const Spatial3D& Axis, float Angle)
 {
 	float vals[3];
 	float sinAngle, cosAngle;
-	Math::Sincos(&sinAngle, &cosAngle, Angle * 0.5f);
-	Axis.ToVector().Store3f(vals);
+	Math::SinCos(&sinAngle, &cosAngle, Angle * 0.5f);
+	Axis.AsIntrinsic().Store3f(vals);
 
 	m_Vector = Vector::Make(
 			vals[0] * sinAngle,
@@ -121,7 +130,7 @@ FORCEINLINE Quaternion Quaternion::operator*=(const Quaternion& Other)
 	return *this;
 }
 
-FORCEINLINE Vector3D Quaternion::operator*(const Vector3D& Other) const
+FORCEINLINE Spatial3D Quaternion::operator*(const Spatial3D& Other) const
 {
 	return Rotate(Other);
 }
@@ -182,22 +191,22 @@ FORCEINLINE float Quaternion::LengthSquared() const
 	return m_Vector.Dot4(m_Vector)[0];
 }
 
-FORCEINLINE Vector3D Quaternion::GetAxisX() const
+FORCEINLINE Spatial3D Quaternion::GetAxisX() const
 {
-	return Rotate(Vector3D(1.0f, 0.0f, 0.0f));
+	return Rotate(Spatial3D(1.0f, 0.0f, 0.0f));
 }
 
-FORCEINLINE Vector3D Quaternion::GetAxisY() const
+FORCEINLINE Spatial3D Quaternion::GetAxisY() const
 {
-	return Rotate(Vector3D(0.0f, 1.0f, 0.0f));
+	return Rotate(Spatial3D(0.0f, 1.0f, 0.0f));
 }
 
-FORCEINLINE Vector3D Quaternion::GetAxisZ() const
+FORCEINLINE Spatial3D Quaternion::GetAxisZ() const
 {
-	return Rotate(Vector3D(0.0f, 0.0f, 1.0f));
+	return Rotate(Spatial3D(0.0f, 0.0f, 1.0f));
 }
 
-FORCEINLINE Vector Quaternion::ToVector() const
+FORCEINLINE Vector Quaternion::AsIntrinsic() const
 {
 	return m_Vector;
 }

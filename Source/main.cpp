@@ -65,11 +65,11 @@ static int RunApp(Application* App)
 	for (uint32 Index = 0; Index < _NumInstances; Index++) 
 	{
 		_TransformMatrixArray.push_back(Matrix::Identity());
-		_Transform.SetTranslation(Vector3D((Math::Randf() * _RandScaleX)-_RandScaleX/2.0f,	(Math::Randf() * _RandScaleY)-_RandScaleY/2.0f, _RandZ));
+		_Transform.SetTranslation(Cartesian3D((Math::Randf() * _RandScaleX)-_RandScaleX/2.0f,	(Math::Randf() * _RandScaleY)-_RandScaleY/2.0f, _RandZ));
 		_TransformMatrixBaseArray.push_back(_Transform.ToMatrix());
 	}
 
-	_Transform.SetTranslation(Vector3D(0.0f,0.0f,0.0f));
+	_Transform.SetTranslation(Cartesian3D(0.0f,0.0f,0.0f));
 	
 	RenderDevice::DrawParams drawParams;
 	drawParams.PrimitiveType = RenderDevice::PRIMITIVE_TRIANGLES;
@@ -102,7 +102,7 @@ static int RunApp(Application* App)
 		while(updateTimer >= frameTime) {
 			App->HandleMessage(frameTime);
 			// Begin scene update
-			_Transform.SetRotation(Quaternion(Vector3D(1.0f, 1.0f, 1.0f).Normalized(), _Amount*10.0f/11.0f));
+			_Transform.SetRotation(Quaternion(Spatial3D(Cartesian3D(1.f)).Normalized().Inner(), _Amount*10.0f/11.0f));
 			for(uint32 i = 0; i < _TransformMatrixArray.size(); i++) {
 				_TransformMatrixArray[i] = (_Perspective * _TransformMatrixBaseArray[i] * _Transform.ToMatrix());
 			}
@@ -133,11 +133,18 @@ static int RunApp(Application* App)
 #ifdef main
 #undef main
 #endif
+
+#define USE_PARAMATER(x) x;
+
 int main(int argc, char** argv)
 {
+	/** @todo(devlinw, @any): pull arguments from the command line */
+
+	USE_PARAMATER(argc) USE_PARAMATER(argv)
 	Application* _App = Application::StartApplication();
 	int32 _Results = RunApp(_App);
 	delete _App;
 	return _Results;
 }
 
+#undef USE_PARAMATER

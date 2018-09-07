@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VecMath.h"
-#include "Vector.h"
+#include "Cartesian.h"
 #include "Quaternion.h"
 #include "Plane.h"
 
@@ -13,15 +13,15 @@ public:
 			const Vector& vecZ, const Vector& vecOffset);
 
 	static FORCEINLINE Matrix Identity();
-	static FORCEINLINE Matrix Translate(const Vector3D& amt);
-	static FORCEINLINE Matrix Scale(const Vector3D& amt);
+	static FORCEINLINE Matrix Translate(const Cartesian3D& amt);
+	static FORCEINLINE Matrix Scale(const Cartesian3D& amt);
 	static FORCEINLINE Matrix Scale(float amt);
 	static FORCEINLINE Matrix Ortho(float left, float right,
 			float bottom, float top, float near, float far);
 	static FORCEINLINE Matrix Perspective(float halfFov, float aspect,
 			float nearZ, float farZ);
-	static FORCEINLINE Matrix TransformMatrix(const Vector3D& translation,
-			const Quaternion& rotation, const Vector3D& scale);
+	static FORCEINLINE Matrix TransformMatrix(const Cartesian3D& translation,
+			const Quaternion& rotation, const Cartesian3D& scale);
 
 	void ExtractFrustumPlanes(Plane* planes) const;
 	Matrix ToNormalMatrix() const;
@@ -66,7 +66,7 @@ FORCEINLINE Matrix Matrix::Identity()
 			Vector::Make(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
-FORCEINLINE Matrix Matrix::Translate(const Vector3D& amt)
+FORCEINLINE Matrix Matrix::Translate(const Cartesian3D& amt)
 {
 	return Matrix(
 		Vector::Make(1.0f, 0.0f, 0.0f, amt[0]),
@@ -75,7 +75,7 @@ FORCEINLINE Matrix Matrix::Translate(const Vector3D& amt)
 		Vector::Make(0.0f, 0.0f, 0.0f, 1.0f));
 }
 
-FORCEINLINE Matrix Matrix::Scale(const Vector3D& amt)
+FORCEINLINE Matrix Matrix::Scale(const Cartesian3D& amt)
 {
 	return Matrix(
 			Vector::Make(amt[0], 0.0f, 0.0f, 0.0f),
@@ -86,7 +86,7 @@ FORCEINLINE Matrix Matrix::Scale(const Vector3D& amt)
 
 FORCEINLINE Matrix Matrix::Scale(float amt)
 {
-	return Scale(Vector3D(amt));
+	return Scale(Cartesian3D(amt));
 }
 
 FORCEINLINE Matrix Matrix::Ortho(float left, float right,
@@ -117,11 +117,11 @@ FORCEINLINE Matrix Matrix::Perspective(float halfFov, float aspect,
 			Vector::Make(0.0f, 0.0f, 1.0f, 0.0f));
 }
 
-FORCEINLINE Matrix Matrix::TransformMatrix(const Vector3D& translation,
-			const Quaternion& rotation, const Vector3D& scale)
+FORCEINLINE Matrix Matrix::TransformMatrix(const Cartesian3D& translation,
+			const Quaternion& rotation, const Cartesian3D& scale)
 {
 	Matrix result;
-	Vector::CreateTransformMatrix(&result, translation.ToVector(), rotation.ToVector(), scale.ToVector());
+	Vector::CreateTransformMatrix(&result, translation.AsIntrinsic(), rotation.AsIntrinsic(), scale.AsIntrinsic());
 	return result;
 }
 

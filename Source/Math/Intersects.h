@@ -16,7 +16,7 @@ namespace Intersects
 
 	static FORCEINLINE bool intersectPlaneAABB(const AABB& aabb, const Plane& plane, bool& isFullyInside, bool& isPartiallyInside)
 	{
-		intersectPlaneAABBFast(aabb.GetCenter().ToVector(1.0f), aabb.GetExtents().ToVector(1.0f), plane, plane.abs(),
+		intersectPlaneAABBFast(aabb.GetCenter().AsIntrinsic(1.0f), aabb.GetExtents().AsIntrinsic(1.0f), plane, plane.abs(),
 				isFullyInside, isPartiallyInside);
 		return isPartiallyInside && !isFullyInside;
 	}
@@ -37,7 +37,7 @@ namespace Intersects
 
 	static FORCEINLINE bool intersectPlaneSphere(const Sphere& sphere, const Plane& plane, bool& isFullyInside, bool& isPartiallyInside)
 	{
-		intersectPlaneSphereFast(sphere.getCenter().ToVector(1.0f), sphere.getRadius(), plane, isFullyInside, isPartiallyInside);
+		intersectPlaneSphereFast(sphere.getCenter().AsIntrinsic(1.0f), sphere.getRadius(), plane, isFullyInside, isPartiallyInside);
 		return isPartiallyInside && !isFullyInside; 
 	}
 
@@ -59,10 +59,10 @@ namespace Intersects
 
 	static FORCEINLINE bool intersectSphereAABB(const Sphere& sphere, const AABB& aabb)
 	{
-		Vector sphereCenter = sphere.getCenter().ToVector();
+		Vector sphereCenter = sphere.getCenter().AsIntrinsic();
 		float radiusSq = sphere.getRadius()*sphere.getRadius();
-		Vector aabbMins = aabb.GetMinExtents().ToVector();
-		Vector aabbMaxs = aabb.GetMaxExtents().ToVector();
+		Vector aabbMins = aabb.GetMinExtents().AsIntrinsic();
+		Vector aabbMaxs = aabb.GetMaxExtents().AsIntrinsic();
 		return intersectSphereAABBFast(sphereCenter, aabbMins, aabbMaxs, radiusSq);
 	}
 }

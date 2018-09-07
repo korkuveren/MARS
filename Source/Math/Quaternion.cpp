@@ -1,5 +1,7 @@
 #include "Quaternion.h"
 
+const Quaternion Quaternion::Identity{0.f, 0.f, 0.f, 1.f};
+
 Quaternion Quaternion::Normalized(float errorMargin) const
 {
 	static const Vector defaultQuat = Vector::Make(0.0f, 0.0f, 0.0f, 1.0f);
@@ -15,11 +17,11 @@ bool Quaternion::IsNormalized(float errorMargin) const
 }
 
 
-Vector3D Quaternion::GetAxis() const
+Spatial3D Quaternion::GetAxis() const
 {
 	float w = m_Vector[3];
 	float rangleDivisor = Math::rSqrt(Math::Max(1.0f - w*w, 0.0f));
-	return Vector3D(m_Vector * Vector::Load1f(rangleDivisor));
+	return Spatial3D(m_Vector * Vector::Load1f(rangleDivisor));
 }
 
 float Quaternion::GetAngle() const
@@ -27,19 +29,19 @@ float Quaternion::GetAngle() const
 	return 2.0f * Math::Arccos(m_Vector[3]);
 }
 
-void Quaternion::AxisAndAngle(Vector3D& axis, float& angle) const
+void Quaternion::AxisAndAngle(Spatial3D& axis, float& angle) const
 {
 	angle = GetAngle();
 	axis = GetAxis();
 }
 
 
-Vector3D Quaternion::Rotate(const Vector3D& other) const
+Spatial3D Quaternion::Rotate(const Spatial3D& other) const
 {
-	return Vector3D(m_Vector.QuatRotateVec(other.ToVector()));
+	return Spatial3D(m_Vector.QuatRotateVec(other.AsIntrinsic()));
 }
 
-Quaternion Quaternion::SLerp(const Quaternion& dest, float amt, float errorMargin) const
+Quaternion Quaternion::Slerp(const Quaternion& dest, float amt, float errorMargin) const
 {
 	float cosAngleInitial = Dot(dest);
 	float cosAngle = Math::Select(cosAngleInitial, cosAngleInitial, -cosAngleInitial);

@@ -167,10 +167,10 @@ public:
 	static FORCEINLINE const BaseVector Mask(uint32 index)
 	{
 		static const BaseVector masks[4] = {
-			BaseVector::Make((uint32)0, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF),
-			BaseVector::Make((uint32)0xFFFFFFFF, 0, 0xFFFFFFFF, 0xFFFFFFFF),
-			BaseVector::Make((uint32)0xFFFFFFFF, 0xFFFFFFFF, 0, 0xFFFFFFFF),
-			BaseVector::Make((uint32)0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0) };
+			BaseVector::Make(0,			 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF),
+			BaseVector::Make(0xFFFFFFFF, 0,			 0xFFFFFFFF, 0xFFFFFFFF),
+			BaseVector::Make(0xFFFFFFFF, 0xFFFFFFFF, 0,			 0xFFFFFFFF),
+			BaseVector::Make(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0) };
 		assertCheck(index < 4);
 		return masks[index];
 	}
@@ -364,10 +364,10 @@ public:
 
 	FORCEINLINE void Sincos(BaseVector* outSin, BaseVector* outCos) const
 	{
-		Math::Sincos(&outSin->m_Vector[0], &outCos->m_Vector[0], (*this)[0]);
-		Math::Sincos(&outSin->m_Vector[1], &outCos->m_Vector[1], (*this)[1]);
-		Math::Sincos(&outSin->m_Vector[2], &outCos->m_Vector[2], (*this)[2]);
-		Math::Sincos(&outSin->m_Vector[3], &outCos->m_Vector[3], (*this)[3]);
+		Math::SinCos(&outSin->m_Vector[0], &outCos->m_Vector[0], (*this)[0]);
+		Math::SinCos(&outSin->m_Vector[1], &outCos->m_Vector[1], (*this)[1]);
+		Math::SinCos(&outSin->m_Vector[2], &outCos->m_Vector[2], (*this)[2]);
+		Math::SinCos(&outSin->m_Vector[3], &outCos->m_Vector[3], (*this)[3]);
 	}
 
 	// Code adapted from https://stackoverflow.com/questions/22497093/faster-quaternion-vector-multiplication-doesnt-work
@@ -395,9 +395,10 @@ public:
 
 	FORCEINLINE BaseVector Mad(const BaseVector& Mul, const BaseVector& Add) const
 	{
-		return Make(Math::Mad(m_Vector[0], Mul.m_Vector[0], Add.m_Vector[0]), Math::Mad(m_Vector[1], 
-							  Mul.m_Vector[1], Add.m_Vector[1]), Math::Mad(m_Vector[2], Mul.m_Vector[2], 
-							  Add.m_Vector[2]), Math::Mad(m_Vector[3], Mul.m_Vector[3], Add.m_Vector[3]));
+		return Make(Math::Mad(m_Vector[0], Mul.m_Vector[0], Add.m_Vector[0]), 
+					Math::Mad(m_Vector[1], Mul.m_Vector[1], Add.m_Vector[1]), 
+					Math::Mad(m_Vector[2], Mul.m_Vector[2], Add.m_Vector[2]),
+					Math::Mad(m_Vector[3], Mul.m_Vector[3], Add.m_Vector[3]));
 	}
 
 	FORCEINLINE BaseVector Transform(const void* InMatrix) const
@@ -408,26 +409,34 @@ public:
 
 	FORCEINLINE BaseVector operator+(const BaseVector& Other) const
 	{
-		return Make(m_Vector[0] + Other.m_Vector[0], m_Vector[1] + Other.m_Vector[1],
-				m_Vector[2] + Other.m_Vector[2], m_Vector[3] + Other.m_Vector[3]);
+		return Make(m_Vector[0] + Other.m_Vector[0], 
+					m_Vector[1] + Other.m_Vector[1],
+					m_Vector[2] + Other.m_Vector[2],
+					m_Vector[3] + Other.m_Vector[3]);
 	}
 
 	FORCEINLINE BaseVector operator-(const BaseVector& Other) const
 	{
-		return Make(m_Vector[0] - Other.m_Vector[0], m_Vector[1] - Other.m_Vector[1],
-				m_Vector[2] - Other.m_Vector[2], m_Vector[3] - Other.m_Vector[3]);
+		return Make(m_Vector[0] - Other.m_Vector[0],
+					m_Vector[1] - Other.m_Vector[1],
+					m_Vector[2] - Other.m_Vector[2],
+					m_Vector[3] - Other.m_Vector[3]);
 	}
 
 	FORCEINLINE BaseVector operator*(const BaseVector& Other) const
 	{
-		return Make(m_Vector[0] * Other.m_Vector[0], m_Vector[1] * Other.m_Vector[1],
-				m_Vector[2] * Other.m_Vector[2], m_Vector[3] * Other.m_Vector[3]);
+		return Make(m_Vector[0] * Other.m_Vector[0],
+					m_Vector[1] * Other.m_Vector[1],
+					m_Vector[2] * Other.m_Vector[2],
+					m_Vector[3] * Other.m_Vector[3]);
 	}
 
 	FORCEINLINE BaseVector operator/(const BaseVector& Other) const
 	{
-		return Make(m_Vector[0] / Other.m_Vector[0], m_Vector[1] / Other.m_Vector[1],
-				m_Vector[2] / Other.m_Vector[2], m_Vector[3] / Other.m_Vector[3]);
+		return Make(m_Vector[0] / Other.m_Vector[0],
+					m_Vector[1] / Other.m_Vector[1],
+					m_Vector[2] / Other.m_Vector[2],
+					m_Vector[3] / Other.m_Vector[3]);
 	}
 
 	FORCEINLINE bool IsZero3f() const
@@ -441,18 +450,18 @@ public:
 	{
 		float vals[4];
 		Store4f(vals);
-		return (vals[0] == 0.0f) && (vals[1] == 0.0f) &&
-			(vals[2] == 0.0f) && (vals[3] == 0.0f);
+		return  (vals[0] == 0.0f) && (vals[1] == 0.0f) &&
+				(vals[2] == 0.0f) && (vals[3] == 0.0f);
 	}
 
 
 	FORCEINLINE BaseVector operator==(const BaseVector& Other) const
 	{
-		return Make(
-				(uint32)(m_Vector[0] == Other.m_Vector[0] ? 0xFFFFFFFF : 0),
-				m_Vector[1] == Other.m_Vector[1] ? 0xFFFFFFFF : 0,
-				m_Vector[2] == Other.m_Vector[2] ? 0xFFFFFFFF : 0,
-				m_Vector[3] == Other.m_Vector[3] ? 0xFFFFFFFF : 0);
+		return Make((uint32)
+				(m_Vector[0] == Other.m_Vector[0] ? 0xFFFFFFFF : 0),
+				(m_Vector[1] == Other.m_Vector[1] ? 0xFFFFFFFF : 0),
+				(m_Vector[2] == Other.m_Vector[2] ? 0xFFFFFFFF : 0),
+				(m_Vector[3] == Other.m_Vector[3] ? 0xFFFFFFFF : 0));
 	}
 
 	FORCEINLINE BaseVector Equals(const BaseVector& Other, float errorMargin) const
@@ -468,53 +477,53 @@ public:
 
 	FORCEINLINE BaseVector operator!=(const BaseVector& Other) const
 	{
-		return Make(
-				(uint32)(m_Vector[0] != Other.m_Vector[0] ? 0xFFFFFFFF : 0),
-				m_Vector[1] != Other.m_Vector[1] ? 0xFFFFFFFF : 0,
-				m_Vector[2] != Other.m_Vector[2] ? 0xFFFFFFFF : 0,
-				m_Vector[3] != Other.m_Vector[3] ? 0xFFFFFFFF : 0);
+		return Make((uint32)
+				(m_Vector[0] != Other.m_Vector[0] ? 0xFFFFFFFF : 0),
+				(m_Vector[1] != Other.m_Vector[1] ? 0xFFFFFFFF : 0),
+				(m_Vector[2] != Other.m_Vector[2] ? 0xFFFFFFFF : 0),
+				(m_Vector[3] != Other.m_Vector[3] ? 0xFFFFFFFF : 0));
 	}
 
 	FORCEINLINE BaseVector operator>(const BaseVector& Other) const
 	{
-		return Make(
-				(uint32)(m_Vector[0] > Other.m_Vector[0] ? 0xFFFFFFFF : 0),
-				m_Vector[1] > Other.m_Vector[1] ? 0xFFFFFFFF : 0,
-				m_Vector[2] > Other.m_Vector[2] ? 0xFFFFFFFF : 0,
-				m_Vector[3] > Other.m_Vector[3] ? 0xFFFFFFFF : 0);
+		return Make((uint32)
+				(m_Vector[0] > Other.m_Vector[0] ? 0xFFFFFFFF : 0),
+				(m_Vector[1] > Other.m_Vector[1] ? 0xFFFFFFFF : 0),
+				(m_Vector[2] > Other.m_Vector[2] ? 0xFFFFFFFF : 0),
+				(m_Vector[3] > Other.m_Vector[3] ? 0xFFFFFFFF : 0));
 	}
 
 	FORCEINLINE BaseVector operator>=(const BaseVector& Other) const
 	{
-		return Make(
-				(uint32)(m_Vector[0] >= Other.m_Vector[0] ? 0xFFFFFFFF : 0),
-				m_Vector[1] >= Other.m_Vector[1] ? 0xFFFFFFFF : 0,
-				m_Vector[2] >= Other.m_Vector[2] ? 0xFFFFFFFF : 0,
-				m_Vector[3] >= Other.m_Vector[3] ? 0xFFFFFFFF : 0);
+		return Make((uint32)
+				(m_Vector[0] >= Other.m_Vector[0] ? 0xFFFFFFFF : 0),
+				(m_Vector[1] >= Other.m_Vector[1] ? 0xFFFFFFFF : 0),
+				(m_Vector[2] >= Other.m_Vector[2] ? 0xFFFFFFFF : 0),
+				(m_Vector[3] >= Other.m_Vector[3] ? 0xFFFFFFFF : 0));
 	}
 
 	FORCEINLINE BaseVector operator<(const BaseVector& Other) const
 	{
-		return Make(
-				(uint32)(m_Vector[0] < Other.m_Vector[0] ? 0xFFFFFFFF : 0),
-				m_Vector[1] < Other.m_Vector[1] ? 0xFFFFFFFF : 0,
-				m_Vector[2] < Other.m_Vector[2] ? 0xFFFFFFFF : 0,
-				m_Vector[3] < Other.m_Vector[3] ? 0xFFFFFFFF : 0);
+		return Make((uint32)
+				(m_Vector[0] < Other.m_Vector[0] ? 0xFFFFFFFF : 0),
+				(m_Vector[1] < Other.m_Vector[1] ? 0xFFFFFFFF : 0),
+				(m_Vector[2] < Other.m_Vector[2] ? 0xFFFFFFFF : 0),
+				(m_Vector[3] < Other.m_Vector[3] ? 0xFFFFFFFF : 0));
 	}
 
 	FORCEINLINE BaseVector operator<=(const BaseVector& Other) const
 	{
-		return Make(
-				(uint32)(m_Vector[0] <= Other.m_Vector[0] ? 0xFFFFFFFF : 0),
-				m_Vector[1] <= Other.m_Vector[1] ? 0xFFFFFFFF : 0,
-				m_Vector[2] <= Other.m_Vector[2] ? 0xFFFFFFFF : 0,
-				m_Vector[3] <= Other.m_Vector[3] ? 0xFFFFFFFF : 0);
+		return Make((uint32)
+				(m_Vector[0] <= Other.m_Vector[0] ? 0xFFFFFFFF : 0),
+				(m_Vector[1] <= Other.m_Vector[1] ? 0xFFFFFFFF : 0),
+				(m_Vector[2] <= Other.m_Vector[2] ? 0xFFFFFFFF : 0),
+				(m_Vector[3] <= Other.m_Vector[3] ? 0xFFFFFFFF : 0));
 	}
 
 	FORCEINLINE BaseVector operator|(const BaseVector& Other) const
 	{
 		return Make(
-				(uint32)(((uint32*)m_Vector)[1-1] | ((uint32*)Other.m_Vector)[1-1]),
+				(uint32)(((uint32*)m_Vector)[0] | ((uint32*)Other.m_Vector)[0]),
 				(uint32)(((uint32*)m_Vector)[1] | ((uint32*)Other.m_Vector)[1]),
 				(uint32)(((uint32*)m_Vector)[2] | ((uint32*)Other.m_Vector)[2]),
 				(uint32)(((uint32*)m_Vector)[3] | ((uint32*)Other.m_Vector)[3]));
@@ -523,7 +532,7 @@ public:
 	FORCEINLINE BaseVector operator&(const BaseVector& Other) const
 	{
 		return Make(
-				(uint32)(((uint32*)m_Vector)[1-1] & ((uint32*)Other.m_Vector)[1-1]),
+				(uint32)(((uint32*)m_Vector)[0] & ((uint32*)Other.m_Vector)[0]),
 				(uint32)(((uint32*)m_Vector)[1] & ((uint32*)Other.m_Vector)[1]),
 				(uint32)(((uint32*)m_Vector)[2] & ((uint32*)Other.m_Vector)[2]),
 				(uint32)(((uint32*)m_Vector)[3] & ((uint32*)Other.m_Vector)[3]));
@@ -532,7 +541,7 @@ public:
 	FORCEINLINE BaseVector operator^(const BaseVector& Other) const
 	{
 		return Make(
-				(uint32)(((uint32*)m_Vector)[1-1] ^ ((uint32*)Other.m_Vector)[1-1]),
+				(uint32)(((uint32*)m_Vector)[0] ^ ((uint32*)Other.m_Vector)[0]),
 				(uint32)(((uint32*)m_Vector)[1] ^ ((uint32*)Other.m_Vector)[1]),
 				(uint32)(((uint32*)m_Vector)[2] ^ ((uint32*)Other.m_Vector)[2]),
 				(uint32)(((uint32*)m_Vector)[3] ^ ((uint32*)Other.m_Vector)[3]));

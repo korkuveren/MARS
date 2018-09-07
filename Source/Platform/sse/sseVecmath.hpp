@@ -7,7 +7,7 @@
 /*
  *	Minor formating done to keep functions compatible. sse was not written by Gameplay.Solutions
  **/
-
+ 
 #define SSEVector_SHUFFLEMASK(a0,a1,b2,b3) ((a0) | ((a1)<<2) | ((b2)<<4) | ((b3)<<6))
 #define SSEVector_Swizzle_0101(vec)               _mm_movelh_ps(vec, vec)
 #define SSEVector_Swizzle_2323(vec)               _mm_movehl_ps(vec, vec)
@@ -401,10 +401,10 @@ public:
 	{
 		float outSinVals[4];
 		float outCosVals[4];
-		Math::Sincos(&outSinVals[0], &outCosVals[0], (*this)[0]);
-		Math::Sincos(&outSinVals[1], &outCosVals[1], (*this)[1]);
-		Math::Sincos(&outSinVals[2], &outCosVals[2], (*this)[2]);
-		Math::Sincos(&outSinVals[3], &outCosVals[3], (*this)[3]);
+		Math::SinCos(&outSinVals[0], &outCosVals[0], (*this)[0]);
+		Math::SinCos(&outSinVals[1], &outCosVals[1], (*this)[1]);
+		Math::SinCos(&outSinVals[2], &outCosVals[2], (*this)[2]);
+		Math::SinCos(&outSinVals[3], &outCosVals[3], (*this)[3]);
 		*outSin = SSEVector::Load4f(outSinVals);
 		*outCos = SSEVector::Load4f(outCosVals);
 	}

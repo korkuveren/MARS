@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vector.h"
+#include "Cartesian.h"
 class Matrix;
 
 class Plane
@@ -9,23 +9,23 @@ public:
 	FORCEINLINE Plane();
 	FORCEINLINE Plane(const Vector& plane);
 	FORCEINLINE Plane(float x, float y, float z, float w);
-	FORCEINLINE Plane(const Vector3D& normal, float w);
+	FORCEINLINE Plane(const Spatial3D& normal, float w);
 	Plane transform(const Matrix& transform) const;
 
-	FORCEINLINE float dot(const Vector3D& other) const;
+	FORCEINLINE float dot(const Spatial3D& other) const;
 	FORCEINLINE float dotVector(const Vector& other) const;
 	FORCEINLINE float dotPlane(const Plane& other) const;
 	FORCEINLINE Plane normalized(float errorMargin=1.e-8f) const;
 	FORCEINLINE bool isNormalized(float errorMargin=1.e-4f) const;
 
-	FORCEINLINE Vector3D getNormal() const;
-	FORCEINLINE Vector3D reflect(const Vector3D& point) const;
+	FORCEINLINE Spatial3D getNormal() const;
+	FORCEINLINE Spatial3D reflect(const Spatial3D& point) const;
 
-	bool intersectPlanes(Vector3D& intersectionPoint,
+	bool intersectPlanes(Spatial3D& intersectionPoint,
 			const Plane& other1, const Plane& other2,
 			float errormargin=1.e-8f) const;
-	FORCEINLINE float intersectLine(const Vector3D& lineStart, const Vector3D& lineEnd) const;
-	FORCEINLINE float intersectRay(const Vector3D& start, const Vector3D& rayDir) const;
+	FORCEINLINE float intersectLine(const Spatial3D& lineStart, const Spatial3D& lineEnd) const;
+	FORCEINLINE float intersectRay(const Spatial3D& start, const Spatial3D& rayDir) const;
 
 	FORCEINLINE Plane abs() const;
 
@@ -61,12 +61,12 @@ FORCEINLINE Plane::Plane(const Vector& plane) :
 FORCEINLINE Plane::Plane(float x, float y, float z, float w) :
 	data(Vector::Make(x, y, z, w)) {}
 
-FORCEINLINE Plane::Plane(const Vector3D& normal, float w) :
-	data(normal.ToVector(w)) {}
+FORCEINLINE Plane::Plane(const Spatial3D& normal, float w) :
+	data(normal.AsIntrinsic(w)) {}
 
-FORCEINLINE float Plane::dot(const Vector3D& other) const
+FORCEINLINE float Plane::dot(const Spatial3D& other) const
 {
-	return other.ToVector(1.0f).Dot4(data)[0];
+	return other.AsIntrinsic(1.0f).Dot4(data)[0];
 }
 
 FORCEINLINE float Plane::dotVector(const Vector& other) const
@@ -90,26 +90,26 @@ FORCEINLINE bool Plane::isNormalized(float errorMargin) const
 	return Math::Abs(1.0f - (data.Dot3(data)[0])) < errorMargin;
 }
 
-FORCEINLINE Vector3D Plane::getNormal() const
+FORCEINLINE Spatial3D Plane::getNormal() const
 {
-	return Vector3D(data.Normalize3());
+	return Spatial3D(data.Normalize3());
 }
 
-FORCEINLINE float Plane::intersectLine(const Vector3D& lineStart, const Vector3D& lineEnd) const
+FORCEINLINE float Plane::intersectLine(const Spatial3D& lineStart, const Spatial3D& lineEnd) const
 {
 	return intersectRay(lineStart, lineEnd-lineStart);
 }
 
-FORCEINLINE float Plane::intersectRay(const Vector3D& start, const Vector3D& rayDir) const
+FORCEINLINE float Plane::intersectRay(const Spatial3D& start, const Spatial3D& rayDir) const
 {
 	return -dot(start)/rayDir.Dot(getNormal());
 }
 
-FORCEINLINE Vector3D Plane::reflect(const Vector3D& point) const
+FORCEINLINE Spatial3D Plane::reflect(const Spatial3D& point) const
 {
-	Vector pointAsVector(point.ToVector(1.0f));
+	Vector pointAsVector(point.AsIntrinsic(1.0f));
 	Vector dotAmt = VectorConstants::TWO * data.Dot4(pointAsVector);
-	return Vector3D(pointAsVector - (data * dotAmt));
+	return Spatial3D(pointAsVector - (data * dotAmt));
 }
 
 FORCEINLINE Plane Plane::abs() const

@@ -16,12 +16,12 @@ struct GenericMemory
 {
 	static FORCEINLINE void* Memmove(void* Destination, const void* Source, uint64 Amount)
 	{
-		return ::memmove(Destination, Source, Amount);
+		return ::memmove(Destination, Source, (size_t)Amount);
 	}
 
 	static FORCEINLINE int32 Memcmp(const void* Destination, const void* Source, uintptr Amount)
 	{
-		return ::memcmp(Destination, Source, Amount);
+		return ::memcmp(Destination, Source, (size_t)Amount);
 	}
 
 	template<typename T>

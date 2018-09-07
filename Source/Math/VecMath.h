@@ -4,6 +4,7 @@
 #include "Platform/PlatformVectorMath.h"
 #include "Math.h"
 
+/**	Platform specific 4 wide intrinsic "vector", or a suitable stand-in. */
 typedef PlatformVector Vector;
 
 struct VectorConstants

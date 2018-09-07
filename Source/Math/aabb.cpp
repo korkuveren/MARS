@@ -1,11 +1,11 @@
 #include "aabb.h"
 
-AABB::AABB(Vector3D* Points, uint32 Amount)
+AABB::AABB(Spatial3D* Points, uint32 Amount)
 {
 	if (Amount == 0) 
 	{
-		m_Extents[0] = Vector3D(0.f, 0.f, 0.f);
-		m_Extents[1] = Vector3D(0.f, 0.f, 0.f);
+		m_Extents[0] = Cartesian3D(0.f, 0.f, 0.f);
+		m_Extents[1] = Cartesian3D(0.f, 0.f, 0.f);
 		return;
 	}
 
@@ -13,8 +13,8 @@ AABB::AABB(Vector3D* Points, uint32 Amount)
 	m_Extents[1] = Points[0];
 	for (uint32 Index = 1; Index < Amount; Index++) 
 	{
-		m_Extents[0] = m_Extents[0].Min(Points[Index]);
-		m_Extents[1] = m_Extents[1].Max(Points[Index]);
+		m_Extents[0] = m_Extents[0].Inner().Min(Points[Index].Inner());
+		m_Extents[1] = m_Extents[1].Inner().Max(Points[Index].Inner());
 	}
 }
 
@@ -22,12 +22,12 @@ AABB::AABB(float* Points, uint32 Amount, uint32 Stride)
 {
 	if (Amount == 0) 
 	{
-		m_Extents[0] = Vector3D(0.f, 0.f, 0.f);
-		m_Extents[1] = Vector3D(0.f, 0.f, 0.f);
+		m_Extents[0] = Cartesian3D(0.f, 0.f, 0.f);
+		m_Extents[1] = Cartesian3D(0.f, 0.f, 0.f);
 		return;
 	}
 
-	Vector3D _InitialPoint(Points[0],Points[1],Points[2]);
+	Spatial3D _InitialPoint = Cartesian3D(Points[0],Points[1],Points[2]);
 	m_Extents[0] = _InitialPoint;
 	m_Extents[1] = _InitialPoint;
 	uintptr index = 3;
@@ -35,17 +35,17 @@ AABB::AABB(float* Points, uint32 Amount, uint32 Stride)
 
 	for (uint32 Index = 1; Index < Amount; Index++) 
 	{
-		Vector3D point(Points[index],Points[index+1],Points[index+2]);
-		m_Extents[0] = m_Extents[0].Min(point);
-		m_Extents[1] = m_Extents[1].Max(point);
+		Spatial3D point = Cartesian3D(Points[index],Points[index+1],Points[index+2]);
+		m_Extents[0] = m_Extents[0].Inner().Min(point.Inner());
+		m_Extents[1] = m_Extents[1].Inner().Max(point.Inner());
 		index += Stride;
 	}
 }
 
 AABB AABB::Transform(const Matrix& InTransform) const
 {
-	Vector Center(GetCenter().ToVector(1.f));
-	Vector Extents(GetExtents().ToVector(0.f));
+	Vector Center(GetCenter().AsIntrinsic(1.f));
+	Vector Extents(GetExtents().AsIntrinsic(0.f));
 	Vector absExtents = Extents.Abs();
 	Matrix AbsMatrix(InTransform);
 	
@@ -59,12 +59,12 @@ AABB AABB::Transform(const Matrix& InTransform) const
 	return AABB(newCenter - newExtents, newCenter + newExtents);
 }
 
-bool AABB::IntersectRay(const Vector3D& start, const Vector3D& rayDir, float& point1, float& point2) const
+bool AABB::IntersectRay(const Spatial3D& start, const Spatial3D& rayDir, float& point1, float& point2) const
 {
-	Vector startVec = start.ToVector();
-	Vector dirVec = rayDir.ToVector();
-	Vector minVec = m_Extents[0].ToVector();
-	Vector maxVec = m_Extents[1].ToVector();
+	Vector startVec = start.AsIntrinsic();
+	Vector dirVec = rayDir.AsIntrinsic();
+	Vector minVec = m_Extents[0].AsIntrinsic();
+	Vector maxVec = m_Extents[1].AsIntrinsic();
 	Vector rdirVec = dirVec.Reciprocal();
 	Vector intersects1 = (minVec-startVec)*rdirVec;
 	Vector intersects2 = (maxVec-startVec)*rdirVec;
@@ -97,10 +97,10 @@ bool AABB::IntersectRay(const Vector3D& start, const Vector3D& rayDir, float& po
 	return true;
 }
 
-bool AABB::IntersectLine(const Vector3D& start, const Vector3D& end) const
+bool AABB::IntersectLine(const Spatial3D& start, const Spatial3D& end) const
 {
 	float p1, p2;
-	Vector3D dir = (end-start);
+	Spatial3D dir = (end-start);
 	bool intersect = IntersectRay(start, dir.Normalized(), p1, p2);
 	return intersect && p1*p1 < dir.LengthSquared();
 } 

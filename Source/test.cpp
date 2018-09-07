@@ -6,13 +6,73 @@
 #include "Math/Plane.h"
 #include "Math/Intersects.h"
 
+static void testMathTypesMemoryLayout()
+{
+	assert(sizeof(Cartesian3D) == sizeof(Euler3D) && sizeof(Cartesian3D) == sizeof(Spatial3D));
+	
+	float Vals[4];
+
+	float& FourthVal	= Vals[3];
+	float& ThirdVal		= Vals[2];
+	float& SecondVal	= Vals[1];
+	float& FirstVal		= Vals[0];
+
+	FirstVal = 1.f;
+	SecondVal = 2.f;
+	ThirdVal = 3.f;
+	FourthVal = 0.f;
+
+	size_t sizeTA = sizeof(Cartesian3D);
+	void* TestArea = _malloca(sizeTA);
+	memcpy(TestArea, &Vals, sizeTA);
+	
+	assert((*((Cartesian2D*)TestArea)).X() == FirstVal);
+	assert((*((Cartesian2D*)TestArea)).Y() == SecondVal);
+
+	assert((*((Cartesian3D*)TestArea))[0] == FirstVal);
+	assert((*((Cartesian3D*)TestArea))[1] == SecondVal);
+	assert((*((Cartesian3D*)TestArea))[2] == ThirdVal);
+	assert((*((Cartesian3D*)TestArea))[3] == FourthVal);
+
+	assert((*((Spatial3D*)TestArea)).X() == FirstVal);
+	assert((*((Spatial3D*)TestArea)).Y() == SecondVal);
+	assert((*((Spatial3D*)TestArea)).Z() == ThirdVal);
+	assert((*((Spatial3D*)TestArea))[3]  == FourthVal);
+
+	assert((*((Euler3D*)TestArea)).Roll() == FirstVal);
+	assert((*((Euler3D*)TestArea)).Pitch() == SecondVal);
+	assert((*((Euler3D*)TestArea)).Yaw() == ThirdVal);
+	assert((*((Euler3D*)TestArea))[3] == FourthVal);
+
+	SecondVal = ThirdVal = FirstVal;
+	memcpy(TestArea, &Vals, sizeTA);
+	
+	assert((*((Cartesian2D*)TestArea)) == Cartesian2D::One);
+	assert((*((Spatial3D*)TestArea)) == Spatial3D::One);
+	assert((*((Euler3D*)TestArea)) == Euler3D(1.f));
+
+	FourthVal	= 0.f;
+	ThirdVal	= 3.f;
+	SecondVal	= 2.f;
+	FirstVal	= 1.f;
+
+	memcpy(TestArea, &Vals, sizeTA);
+	Vector Test2 = Vector::Load4f((float*)TestArea);
+	Vector Eq = (*((Vector*)TestArea) == Test2);
+
+	assert(	 Eq[0] != 0
+		  && Eq[1] != 0
+		  && Eq[2] != 0
+		  && Eq[3] != 0);
+}
+
 static void testSphere()
 {
-	Sphere sphere1(Vector3D(0.0f, 0.0f, 0.0f), 1.0f);
-	Sphere sphere2(Vector3D(0.0f, 3.0f, 0.0f), 1.0f);
-	Sphere sphere3(Vector3D(0.0f, 0.0f, 2.0f), 1.0f);
-	Sphere sphere4(Vector3D(1.0f, 0.0f, 0.0f), 1.0f);
-	Sphere sphere5(Vector3D(1.0f, 0.0f, 0.0f), 2.0f);
+	Sphere sphere1(Spatial3D(0.0f, 0.0f, 0.0f), 1.0f);
+	Sphere sphere2(Spatial3D(0.0f, 3.0f, 0.0f), 1.0f);
+	Sphere sphere3(Spatial3D(0.0f, 0.0f, 2.0f), 1.0f);
+	Sphere sphere4(Spatial3D(1.0f, 0.0f, 0.0f), 1.0f);
+	Sphere sphere5(Spatial3D(1.0f, 0.0f, 0.0f), 2.0f);
 
 	assert(!sphere1.intersects(sphere2));
 	assert(!sphere1.intersects(sphere3,0.0f));
@@ -21,9 +81,9 @@ static void testSphere()
 	assert(sphere1.intersects(sphere5));
 	assert(sphere5.contains(sphere1));
 	assert(!sphere1.contains(sphere5));
-	assert(sphere1.contains(Vector3D(0.0f,1.0f,0.0f)));
-	assert(!sphere1.contains(Vector3D(-1.1f,0.0f,0.0f)));
-	assert(sphere1.moveTo(Vector3D(-1.0f,0.0f,0.0f)).contains(Vector3D(-1.1f,0.0f,0.0f)));
+	assert(sphere1.contains(Spatial3D(0.0f,1.0f,0.0f)));
+	assert(!sphere1.contains(Spatial3D(-1.1f,0.0f,0.0f)));
+	assert(sphere1.moveTo(Spatial3D(-1.0f,0.0f,0.0f)).contains(Spatial3D(-1.1f,0.0f,0.0f)));
 
 	Sphere superSphere = sphere1.addSphere(sphere2).addSphere(sphere3).addSphere(sphere4).addSphere(sphere5);
 	assert(superSphere.contains(sphere1));
@@ -35,24 +95,24 @@ static void testSphere()
 
 static void testAABB()
 {
-	AABB aabb1(Vector3D(0.0f, 0.0f, 0.0f), Vector3D(1.0f, 1.0f, 1.0f));
-	AABB aabb2(Vector3D(1.0f, 1.0f, 1.0f), Vector3D(2.0f, 2.0f, 2.0f));
-	AABB aabb3(Vector3D(1.0f, 0.0f, 0.0f), Vector3D(2.0f, 1.0f, 1.0f));
-	AABB aabb4(Vector3D(0.0f, 0.0f, -2.0f), Vector3D(1.0f, 1.0f, -1.0f));
-	AABB aabb5(Vector3D(0.0f, 0.5f, 0.0f), Vector3D(1.0f, 1.5f, 1.0f));
-	AABB aabb6(Vector3D(0.3f, 0.5f, 0.7f), Vector3D(1.3f, 1.5f, 1.7f));
-	AABB aabb7(Vector3D(0.3f, 0.5f, 0.7f), Vector3D(0.5f, 0.7f, 0.9f));
+	AABB aabb1(Spatial3D(0.0f, 0.0f, 0.0f), Spatial3D(1.0f, 1.0f, 1.0f));
+	AABB aabb2(Spatial3D(1.0f, 1.0f, 1.0f), Spatial3D(2.0f, 2.0f, 2.0f));
+	AABB aabb3(Spatial3D(1.0f, 0.0f, 0.0f), Spatial3D(2.0f, 1.0f, 1.0f));
+	AABB aabb4(Spatial3D(0.0f, 0.0f, -2.0f), Spatial3D(1.0f, 1.0f, -1.0f));
+	AABB aabb5(Spatial3D(0.0f, 0.5f, 0.0f), Spatial3D(1.0f, 1.5f, 1.0f));
+	AABB aabb6(Spatial3D(0.3f, 0.5f, 0.7f), Spatial3D(1.3f, 1.5f, 1.7f));
+	AABB aabb7(Spatial3D(0.3f, 0.5f, 0.7f), Spatial3D(0.5f, 0.7f, 0.9f));
 
 	assert(aabb1.Intersects(aabb2) == false);
-	assert(aabb1.Intersects(aabb2.Translate(Vector3D(-0.5f))) == true);
-	assert(aabb1.Intersects(aabb2.Translate(Vector3D(0.5f))) == false);
+	assert(aabb1.Intersects(aabb2.Translate(Spatial3D(-0.5f))) == true);
+	assert(aabb1.Intersects(aabb2.Translate(Spatial3D(0.5f))) == false);
 	assert(aabb1.Intersects(aabb3) == false);
 	assert(aabb1.Intersects(aabb4) == false);
 	assert(aabb1.Intersects(aabb5) == true);
 	assert(aabb1.Intersects(aabb6) == true);
 
-	assert(aabb1.Intersects(aabb6.Translate(Vector3D(1.0f))) == false);
-	assert(aabb1.Intersects(aabb6.Translate(Vector3D(0.2f))) == true);
+	assert(aabb1.Intersects(aabb6.Translate(Spatial3D(1.0f))) == false);
+	assert(aabb1.Intersects(aabb6.Translate(Spatial3D(0.2f))) == true);
 	assert(aabb1.Contains(aabb1) == false);
 	assert(aabb1.Contains(aabb2) == false);
 	assert(aabb1.Contains(aabb3) == false);
@@ -69,7 +129,7 @@ static void testAABB()
 	assert(aabb6.Intersects(aabb8) == true);
 	assert(aabb7.Intersects(aabb8) == true);
 
-	Transform transform(Vector3D(2.0f,1.0f,-1.0f), Quaternion(0.0f,0.0f,0.0f,1.0f), Vector3D(0.5f,2.0f,3.0f));
+	Transform transform(Spatial3D(2.0f,1.0f,-1.0f), Quaternion(0.0f,0.0f,0.0f,1.0f), Spatial3D(0.5f,2.0f,3.0f));
 	AABB aabb1Transformed = aabb1.Transform(transform.ToMatrix());
 	assert(Math::Abs(aabb1Transformed.GetCenter()[0]-2.25f) < 1.e-4f);
 	assert(Math::Abs(aabb1Transformed.GetCenter()[1]-2.0f) < 1.e-4f);
@@ -81,15 +141,17 @@ static void testAABB()
 
 static void testMath()
 {
-	Vector3D _Translation(5.64635f, 1.325345f, 2.02523f);
-	Quaternion _Rotation(Vector3D(1.242f, 2.2432f, 3.75354f).Normalized(), 2.54343f);
-	Vector3D _Scale(1.4215f,0.123141f,3.7423f);
+	testMathTypesMemoryLayout();
+
+	Spatial3D _Translation(5.64635f, 1.325345f, 2.02523f);
+	Quaternion _Rotation(Spatial3D(1.242f, 2.2432f, 3.75354f).Normalized().Inner(), 2.54343f);
+	Spatial3D _Scale(1.4215f,0.123141f,3.7423f);
 	Transform _Transform(_Translation, _Rotation, _Scale);
 	Matrix _TransformMat(_Transform.ToMatrix());
 
 	Quaternion _Rot2(_TransformMat.GetRotation());
-	assert(_Scale.Equals(Vector3D(_TransformMat.GetScale())));
-	assert(_Translation.Equals(Vector3D(_TransformMat.GetTranslation())));
+	assert(_Scale.Inner().Equals(_TransformMat.GetScale()));
+	assert(_Translation.Inner().Equals(_TransformMat.GetTranslation()));
 	assert(_Rot2.Equals(_Rotation));
 	
 	assert(Math::Abs(_TransformMat.Determinant4x4() - 0.655071f) < 1.e-4f);
@@ -97,24 +159,24 @@ static void testMath()
 	Matrix _ShouldBeIdentity = _InverseMat * _TransformMat;
 	assert(_ShouldBeIdentity.Equals(Matrix::Identity()));
 
-	Vector3D _Point(1.337f,3.778f,-2.419f);
-	Vector3D _Point2(1.337f,3.778f,-2.419f);
-	_Point = _TransformMat.Transform(_Point.ToVector(1.0f));
-	_Point2 = _Transform.Transforms(_Point2.ToVector(1.0f));
-	assert(_Point.Equals(_Point2));
+	Spatial3D _Point(1.337f,3.778f,-2.419f);
+	Spatial3D _Point2(1.337f,3.778f,-2.419f);
+	_Point = _TransformMat.Transform(_Point.AsIntrinsic(1.0f));
+	_Point2 = _Transform.Transforms(_Point2.AsIntrinsic(1.0f));
+	assert(_Point.Inner().Equals(_Point2.Inner()));
 
-	Vector3D _Point3(1.337f,3.778f,-2.419f);
-	Vector3D _Point4(1.337f,3.778f,-2.419f);
-	_Point3 = _TransformMat.Inverse().Transform(_Point3.ToVector(1.0f));
-	_Point4 = _Transform.Inverse().Transform(_Point4.ToVector(1.0f));
-	assert(_Point3.Equals(_Point4));
-	assert(Vector3D(_Transform.Transforms(Vector3D(_Transform.InverseTransform(_Point3, 1.0f)), 1.0f)).Equals(_Point3));
+	Spatial3D _Point3(1.337f,3.778f,-2.419f);
+	Spatial3D _Point4(1.337f,3.778f,-2.419f);
+	_Point3 = _TransformMat.Inverse().Transform(_Point3.AsIntrinsic(1.0f));
+	_Point4 = _Transform.Inverse().Transform(_Point4.AsIntrinsic(1.0f));
+	assert(_Point3.Inner().Equals(_Point4.Inner()));
+	assert(Spatial3D(_Transform.Transforms(Spatial3D(_Transform.InverseTransform(_Point3, 1.0f)), 1.0f)).Inner().Equals(_Point3.Inner()));
 	
 	Matrix _InverseMat2(_Transform.Inverse());
 	Matrix _TestResult(_InverseMat2*_TransformMat);
 	assert(_InverseMat.Equals(_InverseMat2));
 
-	Quaternion _Rotation2(Vector3D(13.242f, 22.2432f, 3.745354f).Normalized(), -22.54343f);
+	Quaternion _Rotation2(Spatial3D(13.242f, 22.2432f, 3.745354f).Normalized().Inner(), -22.54343f);
 	Quaternion _Mul = _Rotation*_Rotation2;
 	_Mul = _Mul*_Rotation2.Inverse();
 	assert(_Mul.Equals(_Rotation));
@@ -122,28 +184,28 @@ static void testMath()
 
 static void testPlane()
 {
-	Plane plane1(Vector3D(1.0f,0.0f,0.0f),-1.0f);
-	Plane plane2(Vector3D(0.0f,1.0f,0.0f),-1.0f);
-	Plane plane3(Vector3D(0.0f,0.0f,1.0f),-1.0f);
-	assert(Math::Abs(plane1.dot(Vector3D(2.0f,0.0f,0.0f))-1.0f) < 1.e-4f);
-	assert(Math::Abs(plane2.dot(Vector3D(2.0f,0.0f,0.0f))+1.0f) < 1.e-4f);
-	assert(Math::Abs(plane3.dot(Vector3D(2.0f,0.0f,0.0f))+1.0f) < 1.e-4f);
-	Vector3D intersectionPoint;
+	Plane plane1(Spatial3D(1.0f,0.0f,0.0f),-1.0f);
+	Plane plane2(Spatial3D(0.0f,1.0f,0.0f),-1.0f);
+	Plane plane3(Spatial3D(0.0f,0.0f,1.0f),-1.0f);
+	assert(Math::Abs(plane1.dot(Spatial3D(2.0f,0.0f,0.0f))-1.0f) < 1.e-4f);
+	assert(Math::Abs(plane2.dot(Spatial3D(2.0f,0.0f,0.0f))+1.0f) < 1.e-4f);
+	assert(Math::Abs(plane3.dot(Spatial3D(2.0f,0.0f,0.0f))+1.0f) < 1.e-4f);
+	Spatial3D intersectionPoint;
 	plane1.intersectPlanes(intersectionPoint,plane2,plane3);
 	assert(Math::Abs(plane1.dot(intersectionPoint)) < 1.e-4f);
 	assert(Math::Abs(plane2.dot(intersectionPoint)) < 1.e-4f);
 	assert(Math::Abs(plane3.dot(intersectionPoint)) < 1.e-4f);
 
-	Plane plane4(Vector3D(0.13f,0.46f,0.89f).Normalized(),-0.1f);
-	Plane plane5(Vector3D(-0.74f,2.3f,-0.1f).Normalized(),2.3f);
-	Plane plane6(Vector3D(1.0f,-2.0f,10.0f).Normalized(),-23.7f);
+	Plane plane4(Spatial3D(0.13f,0.46f,0.89f).Normalized(),-0.1f);
+	Plane plane5(Spatial3D(-0.74f,2.3f,-0.1f).Normalized(),2.3f);
+	Plane plane6(Spatial3D(1.0f,-2.0f,10.0f).Normalized(),-23.7f);
 	plane4.intersectPlanes(intersectionPoint,plane5,plane6);
 	assert(Math::Abs(plane4.dot(intersectionPoint)) < 1.e-4f);
 	assert(Math::Abs(plane5.dot(intersectionPoint)) < 1.e-4f);
 	assert(Math::Abs(plane6.dot(intersectionPoint)) < 1.e-4f);
 
-	Vector3D lineStart(0.0f,0.0f,0.0f);
-	Vector3D lineEnd(2.0f,0.0f,0.0f);
+	Spatial3D lineStart(0.0f,0.0f,0.0f);
+	Spatial3D lineEnd(2.0f,0.0f,0.0f);
 	assert(Math::Abs(plane1.intersectLine(lineStart,lineEnd)-0.5f) < 1.e-4);
 	float amt = plane5.intersectLine(lineStart,lineEnd);
 	intersectionPoint = lineStart+(lineEnd-lineStart)*amt;
@@ -152,22 +214,22 @@ static void testPlane()
 	intersectionPoint = lineStart+(lineEnd-lineStart)*amt;
 	assert(Math::Abs(plane6.dot(intersectionPoint)) < 1.e-4f);
 
-	Vector3D scale = Vector3D(0.4f,2.3f,1.7f);
-	Transform transform(Vector3D(0.0f,0.0f,2.0f),
-			Quaternion(Vector3D(0.0f,1.0f,0.0f),Math::ToRad(90.0f)),
+	Spatial3D scale = Spatial3D(0.4f,2.3f,1.7f);
+	Transform transform(Spatial3D(0.0f,0.0f,2.0f).Inner(),
+			Quaternion(Spatial3D(0.0f,1.0f,0.0f).Inner(),Math::ToRad(90.0f)),
 		scale);
 	Matrix transformMat = transform.ToMatrix();
 
 	Plane plane1Transformed = plane1.transform(transformMat);
-	assert(Math::Abs(plane1Transformed.dot(Vector3D(2.0f,0.0f,0.0f))-1.6f) < 1.e-4f);
+	assert(Math::Abs(plane1Transformed.dot(Spatial3D(2.0f,0.0f,0.0f))-1.6f) < 1.e-4f);
 }
 
 static void testIntersects()
 {
-	Plane plane1(Vector3D(1.0f,0.0f,0.0f),0.0f);
-	AABB aabb1(Vector3D(1.0f), Vector3D(2.0f));
-	AABB aabb2(Vector3D(-2.0f), Vector3D(-1.0f));
-	AABB aabb3(Vector3D(-1.0f), Vector3D(1.0f));
+	Plane plane1(Spatial3D(1.0f,0.0f,0.0f),0.0f);
+	AABB aabb1(Spatial3D(1.0f), Spatial3D(2.0f));
+	AABB aabb2(Spatial3D(-2.0f), Spatial3D(-1.0f));
+	AABB aabb3(Spatial3D(-1.0f), Spatial3D(1.0f));
 	bool isFullyInside;
 	bool isPartiallyInside;
 	
@@ -178,9 +240,9 @@ static void testIntersects()
 	Intersects::intersectPlaneAABB(aabb3, plane1, isFullyInside, isPartiallyInside);
 	assert(!isFullyInside && isPartiallyInside);
 
-	Sphere sphere1(Vector3D(1.0f), 0.5f);
-	Sphere sphere2(Vector3D(-1.0f), 0.5f);
-	Sphere sphere3(Vector3D(0.0f), 0.5f);
+	Sphere sphere1(Spatial3D(1.0f), 0.5f);
+	Sphere sphere2(Spatial3D(-1.0f), 0.5f);
+	Sphere sphere3(Spatial3D(0.0f), 0.5f);
 
 	Intersects::intersectPlaneSphere(sphere1,plane1,isFullyInside,isPartiallyInside);
 	assert(isFullyInside && isPartiallyInside);
@@ -199,55 +261,55 @@ static void testIntersects()
 	assert(!Intersects::intersectSphereAABB(sphere3,aabb2));
 	assert(Intersects::intersectSphereAABB(sphere3,aabb3));
 
-	Sphere sphere4(Vector3D(0.0f,1.2f,0.0f), 0.5f);
-	AABB aabb4(Vector3D(-100.0f,0.3f,0.2f),Vector3D(0.5f,0.6f,0.5f));
+	Sphere sphere4(Spatial3D(0.0f,1.2f,0.0f), 0.5f);
+	AABB aabb4(Spatial3D(-100.0f,0.3f,0.2f),Spatial3D(0.5f,0.6f,0.5f));
 	assert(!Intersects::intersectSphereAABB(sphere4,aabb4));
 
 	float p1,p2;
-	assert(sphere3.intersectRay(Vector3D(0.0f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(sphere3.intersectRay(Spatial3D(0.0f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
 	assert(Math::Abs(p1-2.5f) < 1.e-4f);
 	assert(Math::Abs(p2-3.5f) < 1.e-4f);
 
-	assert(sphere3.intersectRay(Vector3D(-0.5f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(sphere3.intersectRay(Spatial3D(-0.5f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
 	assert(Math::Abs(p1-3.0f) < 1.e-4f);
 	assert(Math::Abs(p2-3.0f) < 1.e-4f);
-	assert(!sphere3.intersectRay(Vector3D(0.6f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(!sphere3.intersectRay(Spatial3D(0.6f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
 
-	assert(sphere3.intersectLine(Vector3D(0.0f,0.0f,-3.0f),Vector3D(0.0f,0.0f,3.0f)));
-	assert(sphere3.intersectLine(Vector3D(-0.4f,0.0f,-3.0f),Vector3D(-0.4f,0.0f,3.0f)));
-	assert(sphere3.intersectLine(Vector3D(0.4f,0.0f,-3.0f),Vector3D(0.4f,0.0f,3.0f)));
-	assert(!sphere3.intersectLine(Vector3D(0.6f,0.0f,-3.0f),Vector3D(0.6f,0.0f,3.0f)));
-	assert(sphere3.intersectLine(Vector3D(0.5f,0.0f,-3.0f),Vector3D(0.5f,0.0f,3.0f)));
+	assert(sphere3.intersectLine(Spatial3D(0.0f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,3.0f)));
+	assert(sphere3.intersectLine(Spatial3D(-0.4f,0.0f,-3.0f),Spatial3D(-0.4f,0.0f,3.0f)));
+	assert(sphere3.intersectLine(Spatial3D(0.4f,0.0f,-3.0f),Spatial3D(0.4f,0.0f,3.0f)));
+	assert(!sphere3.intersectLine(Spatial3D(0.6f,0.0f,-3.0f),Spatial3D(0.6f,0.0f,3.0f)));
+	assert(sphere3.intersectLine(Spatial3D(0.5f,0.0f,-3.0f),Spatial3D(0.5f,0.0f,3.0f)));
 
-	assert(aabb3.IntersectRay(Vector3D(0.0f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(aabb3.IntersectRay(Spatial3D(0.0f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
 	assert(Math::Abs(p1-2.0f) < 1.e-4f);
 	assert(Math::Abs(p2-4.0f) < 1.e-4f);
-	assert(aabb3.IntersectRay(Vector3D(0.99f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(aabb3.IntersectRay(Spatial3D(0.99f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
 	assert(Math::Abs(p1-2.0f) < 1.e-4f);
 	assert(Math::Abs(p2-4.0f) < 1.e-4f);
-	assert(aabb3.IntersectRay(Vector3D(1.0f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
-	assert(!aabb3.IntersectRay(Vector3D(1.01f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
-	assert(!aabb3.IntersectRay(Vector3D(2.0f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
-	assert(aabb3.IntersectRay(Vector3D(-0.5f,0.0f,-3.0f),Vector3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(aabb3.IntersectRay(Spatial3D(1.0f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(!aabb3.IntersectRay(Spatial3D(1.01f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(!aabb3.IntersectRay(Spatial3D(2.0f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
+	assert(aabb3.IntersectRay(Spatial3D(-0.5f,0.0f,-3.0f),Spatial3D(0.0f,0.0f,1.0f),p1,p2));
 	assert(Math::Abs(p1-2.0f) < 1.e-4f);
 	assert(Math::Abs(p2-4.0f) < 1.e-4f);
 
-	Vector3D points[] = {
-		Vector3D(1.0f,1.0f,1.0f),
-		Vector3D(1.0f,0.0f,1.0f),
-		Vector3D(0.0f,1.0f,1.0f),
-		Vector3D(0.0f,-1.0f,-1.0f),
-		Vector3D(0.0f,0.0f,0.2f),
-		Vector3D(0.7f,0.4f,0.3f),
-		Vector3D(0.3f,-0.8f,0.4f),
-		Vector3D(0.3f,-0.8f,-0.4f),
+	Spatial3D points[] = {
+		Spatial3D(1.0f,1.0f,1.0f),
+		Spatial3D(1.0f,0.0f,1.0f),
+		Spatial3D(0.0f,1.0f,1.0f),
+		Spatial3D(0.0f,-1.0f,-1.0f),
+		Spatial3D(0.0f,0.0f,0.2f),
+		Spatial3D(0.7f,0.4f,0.3f),
+		Spatial3D(0.3f,-0.8f,0.4f),
+		Spatial3D(0.3f,-0.8f,-0.4f),
 	};
 	AABB boundingAABB(points, ARRAY_SIZE_IN_ELEMENTS(points));
-	assert(boundingAABB.GetMinExtents().Equals(Vector3D(0.0f,-1.0f,-1.0f)));
-	assert(boundingAABB.GetMaxExtents().Equals(Vector3D(1.0f,1.0f,1.0f)));
+	assert(boundingAABB.GetMinExtents().Inner().Equals(Spatial3D(0.0f, -1.0f, -1.0f).Inner()));
+	assert(boundingAABB.GetMaxExtents().Inner().Equals(Spatial3D(1.0f, 1.0f, 1.0f).Inner()));
 
 	Sphere boundingSphere(points, ARRAY_SIZE_IN_ELEMENTS(points));
-	assert(boundingSphere.getCenter().Equals(Vector3D(0.5f,0.0f,0.0f)));
+	assert(boundingSphere.getCenter().Inner().Equals(Spatial3D(0.5f,0.0f,0.0f).Inner()));
 	assert(Math::Equals(boundingSphere.getRadius(), 1.5f, 1.e-4f));
 
 	float points2[] = {
@@ -262,11 +324,11 @@ static void testIntersects()
 	};
 
 	boundingAABB = AABB(points2, ARRAY_SIZE_IN_ELEMENTS(points2)/3);
-	assert(boundingAABB.GetMinExtents().Equals(Vector3D(0.0f,-1.0f,-1.0f)));
-	assert(boundingAABB.GetMaxExtents().Equals(Vector3D(1.0f,1.0f,1.0f)));
+	assert(boundingAABB.GetMinExtents().Inner().Equals(Spatial3D(0.0f,-1.0f,-1.0f).Inner()));
+	assert(boundingAABB.GetMaxExtents().Inner().Equals(Spatial3D(1.0f,1.0f,1.0f).Inner()));
 
 	boundingSphere = Sphere(points2, ARRAY_SIZE_IN_ELEMENTS(points2)/3);
-	assert(boundingSphere.getCenter().Equals(Vector3D(0.5f,0.0f,0.0f)));
+	assert(boundingSphere.getCenter().Inner().Equals(Spatial3D(0.5f,0.0f,0.0f).Inner()));
 	assert(Math::Equals(boundingSphere.getRadius(), 1.5f, 1.e-4f));
 }
 
@@ -353,14 +415,14 @@ inline void naiveQuatRotate(float* output, float* a, float* b)
 
 inline void naiveTransformCreate(float* output, float* translation, float* rotation, float* scale)
 {
-	Vector3D translationVec(translation[0],translation[1],translation[2]);
-	Vector3D scaleVec(scale[0],scale[1],scale[2]);
+	Spatial3D translationVec(translation[0],translation[1],translation[2]);
+	Spatial3D scaleVec(scale[0],scale[1],scale[2]);
 	Quaternion rotationVec(rotation[0],rotation[1],rotation[2],rotation[3]);
-	Vector3D nullTranslation(0.0f);
-	Vector3D nullScale(1.0f);
-	Matrix translationMatrix = Matrix::Translate(translationVec);
-	Matrix rotationMatrix = Matrix::TransformMatrix(nullTranslation, rotationVec, nullScale);
-	Matrix scaleMatrix = Matrix::Scale(scaleVec);
+	Spatial3D nullTranslation(0.0f);
+	Spatial3D nullScale(1.0f);
+	Matrix translationMatrix = Matrix::Translate(translationVec.Inner());
+	Matrix rotationMatrix = Matrix::TransformMatrix(nullTranslation.Inner(), rotationVec, nullScale.Inner());
+	Matrix scaleMatrix = Matrix::Scale(scaleVec.Inner());
 	float temp[16];
 	naiveMatrixMultiply(temp, (float*)&scaleMatrix, (float*)&rotationMatrix);
 	naiveMatrixMultiply(output, temp, (float*)&translationMatrix);
